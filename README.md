@@ -1,2 +1,2 @@
 # replKAJAM
-My entry replyKAJAM
+My entry to replyKAJAM
