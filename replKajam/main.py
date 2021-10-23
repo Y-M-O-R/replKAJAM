@@ -59,7 +59,8 @@ class Obstacle(pygame.sprite.Sprite):
         self.image = pygame.Surface([self.width, self.height])
         self.image.fill((250, 0, 0))
         # self.image.set_colorkey((250, 0, 0))
-        self.rect = (self.x, self.y, self.width, self.height)
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+       # self.rect.midbottom = (screen_width, screen_height)
 
 
 # player class contains everything player related
@@ -87,7 +88,7 @@ class Player(pygame.sprite.Sprite):
             pygame.image.load(os.path.join(self.file_location, 'run', '5.png')).convert_alpha(),
             pygame.image.load(os.path.join(self.file_location, 'run', '6.png')).convert_alpha(),
             pygame.image.load(os.path.join(self.file_location, 'run', '7.png')).convert_alpha()
-            ]
+        ]
 
         self.walk_left_animation = []
 
@@ -98,7 +99,7 @@ class Player(pygame.sprite.Sprite):
             pygame.image.load(os.path.join(self.file_location, 'jump', '1.png')).convert_alpha(),
             pygame.image.load(os.path.join(self.file_location, 'jump', '2.png')).convert_alpha(),
             pygame.image.load(os.path.join(self.file_location, 'jump', '3.png')).convert_alpha()
-            ]
+        ]
         self.jump_animation_left = []
 
         for image in self.jump_animation_right:
@@ -122,11 +123,7 @@ class Player(pygame.sprite.Sprite):
 
         self.rect = self.image.convert_alpha().get_rect()
 
-
-
-
         self.rect.midbottom = (screen_width // 2, screen_height)
-
 
         self.sprite_direction = True
 
@@ -137,7 +134,7 @@ class Player(pygame.sprite.Sprite):
 
     def display_hit_box(self):  # displays object hit box used for testing
         # (Surface.rect.width // 2, Surface.rect.height // 2)
-        self.rectr = ((self.rect.x+30, self.rect.y+40), (35, 47.5))
+        self.rectr = ((self.rect.x + 30, self.rect.y + 40), (35, 47.5))
 
         pygame.draw.rect(screen, (250, 0, 0), self.rect, 2)
 
@@ -198,6 +195,7 @@ class Player(pygame.sprite.Sprite):
         else:
             # jump animation
             if self.jump_count >= -10:  # jump will be in parabola shape (negative quadratic graph)
+                print('self', self.jump_count)
                 if self.sprite_direction:  # jump facing right
                     if 10 >= self.jump_count > 1:
                         self.image = self.jump_animation_right[0]  # jump rise animation
@@ -213,6 +211,7 @@ class Player(pygame.sprite.Sprite):
                         neg = -1
                     self.rect.y -= (self.jump_count ** 2) * 0.5 * neg
                     self.jump_count -= 1
+                    print(self.jump_count)
 
                 elif not self.sprite_direction:  # jump facing left
                     if 10 >= self.jump_count > 1:
@@ -265,7 +264,7 @@ run = True
 while run:
     obstacle_collision = pygame.sprite.spritecollide(player, obstacle_sprite, False)
     if obstacle_collision:
-        print('fried rice')
+        player.rect.x, player.rect.y = obs.rect.x, obs.rect.y - obs.height
     obstacle_sprite.draw(screen)
     all_sprites.draw(screen)
     all_sprites.update()
