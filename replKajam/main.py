@@ -121,8 +121,13 @@ class Player(pygame.sprite.Sprite):
         self.image = self.idle_animation[self.walk_count]
 
         self.rect = self.image.convert_alpha().get_rect()
-        # self.rect.width, self.rect.height = width, height
+
+
+
+
         self.rect.midbottom = (screen_width // 2, screen_height)
+
+
         self.sprite_direction = True
 
     def check_health(self):
@@ -131,6 +136,9 @@ class Player(pygame.sprite.Sprite):
         return False
 
     def display_hit_box(self):  # displays object hit box used for testing
+        # (Surface.rect.width // 2, Surface.rect.height // 2)
+        self.rectr = ((self.rect.x+30, self.rect.y+40), (35, 47.5))
+
         pygame.draw.rect(screen, (250, 0, 0), self.rect, 2)
 
         pygame.display.update()
