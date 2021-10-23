@@ -7,6 +7,7 @@ pygame.init()
 # screen
 screen_width, screen_height = 960, 640
 screen = pygame.display.set_mode((screen_width, screen_height))
+clock = pygame.time.Clock()
 
 
 class Boundary:
@@ -22,7 +23,7 @@ class Boundary:
 screen_border = Boundary(screen)
 
 
-def quit():
+def quit_game():
     for event in pygame.event.get():  # loop to quit game
 
         if event.type == pygame.QUIT:  # fix this
@@ -35,8 +36,30 @@ def quit():
                 sys.exit()
 
 
-def redraw():
-    pygame.display.update()
+class Background:
+    def __init__(self, filename, row, column):
+        self.row = row
+        self.column = column
+        self.background_image = pygame.image.load(filename).convert_alpha()
+        self.background_image_rect = self.background_image.get_rect()
+
+        # self.background_image_rect.x = self.background_image.rect.x//row
+
+    def image_return(self):
+        return self.background_image
+
+
+class Obstacle(pygame.sprite.Sprite):
+    def __init__(self, x, y, width, height):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.image = pygame.Surface([self.width, self.height])
+        self.image.fill((250, 0, 0))
+        # self.image.set_colorkey((250, 0, 0))
+        self.rect = (self.x, self.y, self.width, self.height)
 
 
 # player class contains everything player related
@@ -56,36 +79,38 @@ class Player(pygame.sprite.Sprite):
         self.file_location = os.path.join('img', 'pixel_platformer_player')
 
         # animation for sprite
-        self.walk_right_animation = [pygame.image.load(os.path.join(self.file_location, 'run', '1.png')),
-                                     pygame.image.load(os.path.join(self.file_location, 'run', '2.png')),
-                                     pygame.image.load(os.path.join(self.file_location, 'run', '3.png')),
-                                     pygame.image.load(os.path.join(self.file_location, 'run', '4.png')),
-                                     pygame.image.load(os.path.join(self.file_location, 'run', '5.png')),
-                                     pygame.image.load(os.path.join(self.file_location, 'run', '6.png')),
-                                     pygame.image.load(os.path.join(self.file_location, 'run', '7.png'))
-                                     ]
+        self.walk_right_animation = [
+            pygame.image.load(os.path.join(self.file_location, 'run', '1.png')).convert_alpha(),
+            pygame.image.load(os.path.join(self.file_location, 'run', '2.png')).convert_alpha(),
+            pygame.image.load(os.path.join(self.file_location, 'run', '3.png')).convert_alpha(),
+            pygame.image.load(os.path.join(self.file_location, 'run', '4.png')).convert_alpha(),
+            pygame.image.load(os.path.join(self.file_location, 'run', '5.png')).convert_alpha(),
+            pygame.image.load(os.path.join(self.file_location, 'run', '6.png')).convert_alpha(),
+            pygame.image.load(os.path.join(self.file_location, 'run', '7.png')).convert_alpha()
+            ]
 
         self.walk_left_animation = []
 
         for image in self.walk_right_animation:
             self.walk_left_animation.append(pygame.transform.flip(image, True, False))
 
-        self.jump_animation_right = [pygame.image.load(os.path.join(self.file_location, 'jump', '1.png')),
-                                     pygame.image.load(os.path.join(self.file_location, 'jump', '2.png')),
-                                     pygame.image.load(os.path.join(self.file_location, 'jump', '3.png'))
-                                     ]
+        self.jump_animation_right = [
+            pygame.image.load(os.path.join(self.file_location, 'jump', '1.png')).convert_alpha(),
+            pygame.image.load(os.path.join(self.file_location, 'jump', '2.png')).convert_alpha(),
+            pygame.image.load(os.path.join(self.file_location, 'jump', '3.png')).convert_alpha()
+            ]
         self.jump_animation_left = []
 
         for image in self.jump_animation_right:
             self.jump_animation_left.append(pygame.transform.flip(image, True, False))
         self.idle_animation = [
-            pygame.image.load(os.path.join(self.file_location, 'idle', '1.png')),
-            pygame.image.load(os.path.join(self.file_location, 'idle', '2.png')),
-            pygame.image.load(os.path.join(self.file_location, 'idle', '3.png')),
-            pygame.image.load(os.path.join(self.file_location, 'idle', '4.png')),
-            pygame.image.load(os.path.join(self.file_location, 'idle', '5.png')),
-            pygame.image.load(os.path.join(self.file_location, 'idle', '6.png')),
-            pygame.image.load(os.path.join(self.file_location, 'idle', '7.png'))
+            pygame.image.load(os.path.join(self.file_location, 'idle', '1.png')).convert_alpha(),
+            pygame.image.load(os.path.join(self.file_location, 'idle', '2.png')).convert_alpha(),
+            pygame.image.load(os.path.join(self.file_location, 'idle', '3.png')).convert_alpha(),
+            pygame.image.load(os.path.join(self.file_location, 'idle', '4.png')).convert_alpha(),
+            pygame.image.load(os.path.join(self.file_location, 'idle', '5.png')).convert_alpha(),
+            pygame.image.load(os.path.join(self.file_location, 'idle', '6.png')).convert_alpha(),
+            pygame.image.load(os.path.join(self.file_location, 'idle', '7.png')).convert_alpha()
         ]
         self.idle_animation_left = []
 
@@ -95,7 +120,7 @@ class Player(pygame.sprite.Sprite):
         self.walk_count = 0
         self.image = self.idle_animation[self.walk_count]
 
-        self.rect = self.image.get_rect()
+        self.rect = self.image.convert_alpha().get_rect()
         # self.rect.width, self.rect.height = width, height
         self.rect.midbottom = (screen_width // 2, screen_height)
         self.sprite_direction = True
@@ -107,7 +132,6 @@ class Player(pygame.sprite.Sprite):
 
     def display_hit_box(self):  # displays object hit box used for testing
         pygame.draw.rect(screen, (250, 0, 0), self.rect, 2)
-
 
         pygame.display.update()
 
@@ -207,12 +231,35 @@ class Player(pygame.sprite.Sprite):
         self.game_control()
 
 
+# redraws screen
+def redraw():
+    clock.tick(20)
+    player.display_hit_box()
+    pygame.display.update()
+    screen.blit(bg_temp, (0, 0))
+
+
+obs = Obstacle(100, 500, 100, 100)
+pbs = Obstacle(500, 500, 200, 50)
+
+obstacle_sprite = pygame.sprite.Group()
+obstacle_sprite.add(obs)
+obstacle_sprite.add(pbs)
+bg_temp = pygame.transform.scale(pygame.image.load(r'C:\Users\ryous\OneDrive\Documents\GitHub\replKAJAM\replKajam\img'
+                                                   r'\download.jpg'), (screen_width, screen_height))
+# bg = pygame.transform.scale(bg_temp, (screen_height, screen_width))
 player = Player()
+# sprite Class
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
+# game loop
 run = True
 while run:
+    obstacle_collision = pygame.sprite.spritecollide(player, obstacle_sprite, False)
+    if obstacle_collision:
+        print('fried rice')
+    obstacle_sprite.draw(screen)
     all_sprites.draw(screen)
     all_sprites.update()
     redraw()
-    quit()
+    quit_game()
