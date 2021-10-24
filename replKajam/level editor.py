@@ -4,7 +4,7 @@ import sys
 
 import pygame
 
-screen_width, screen_height = 1000, 700
+screen_width, screen_height = 960, 640
 pygame.init()
 pygame.display.set_caption('Level Editor')
 myfont = pygame.font.SysFont('Comic Sans MS', 30)
@@ -48,13 +48,15 @@ class LevelEditor:
 
         self.sprite_menu_height = screen_height // self.sprite_list[
             0].get_height()  # remainder 8 # check amount of sprites that can fit in column
+
+        self.sprite_list_index = 0
         self.mouse_x, self.mouse_y = pygame.mouse.get_pos()
         self.mouse_rect = pygame.Rect(self.mouse_x, self.mouse_y, 5, 5)
 
         self.mouse_click = False
         self.clicked_sprite = False
 
-    def get_mouse_pos(self): # get mouse positon
+    def get_mouse_pos(self):  # get mouse positon
         self.mouse_x, self.mouse_y = pygame.mouse.get_pos()
         self.mouse_rect = pygame.Rect(self.mouse_x, self.mouse_y, 5, 5)
 
@@ -67,22 +69,50 @@ class LevelEditor:
                 self.sprite_list_rect.append([block_x, y_column, block_width, block_height])
                 y_column += block_height
 
+        self.y_grid = 0
+
     def sprite_menu(self):  # displays sprites
         for (image, image_rect) in zip(self.sprite_list, self.sprite_list_rect):
+            if self.y_grid <= screen_width:
+                self.y_grid = self.y_grid + 9
+
+                print(self.y_grid)
+
             screen.blit(image, image_rect)
+
+            pygame.draw.rect(screen, (250, 250, 250), (image_rect[0], image_rect[1], screen_width, image_rect[3]), 1)
+
+            # pygame.draw.rect(screen, (250, 0, 0), (self.y_grid,20, 60, 60))
             pygame.draw.rect(screen, (0, 0, 0), image_rect, 2)
 
-    def sprite_clicked(self):  # checks if mouse interacts with sprite_menu
+    def menu_clicked(self):  # checks if mouse interacts with sprite_menu
         if self.mouse_click:
+            self.sprite_list_index = 0
+
             for img_rect in self.sprite_list_rect:
+                self.sprite_list_index += 1
                 if self.mouse_rect.colliderect(img_rect):
                     self.mouse_sprite_collide = img_rect
                     self.clicked_sprite = True
+                    break
+                else:
+                    self.clicked_sprite = False
 
-    def sprite_place(self):  # allows sprite to be placed with rect argument
-        if self.clicked_sprite:
+        # for img_rect in self.sprite_list_rect:
+        #     if not self.mouse_rect.colliderect(img_rect):
+        #         self.clicked_sprite = False
+
+        if self.clicked_sprite:  # highlights clicked sprite
             pygame.draw.rect(screen, (255, 200, 0), self.mouse_sprite_collide, 3)
         pygame.display.update()
+
+    def sprite_place(self):  # allows sprite to be placed with rect argument
+
+        if self.clicked_sprite:
+            # self.sprite_list_index = 0
+
+            if self.mouse_click and not self.mouse_rect.colliderect(self.mouse_sprite_collide):
+                screen.blit(self.sprite_list[self.sprite_list_index - 1], (self.mouse_x, self.mouse_y))
 
     def sprite_edit(self):  # allows for sprites to be edited
         pass
@@ -101,6 +131,9 @@ def game_event():
                 level.mouse_click = True
                 level.get_mouse_pos()
 
+            if event.button == 3:
+                level.clicked_sprite = False
+
                 # sprite_menu.mouse_x, sprite_menu.mouse_y = mx, my
         if event.type == pygame.QUIT:  # fix this
             pygame.quit()
@@ -115,6 +148,7 @@ def game_event():
 
 def redraw():
     level.sprite_menu()
+
     pygame.display.update()
 
 
@@ -122,10 +156,13 @@ mx, my = pygame.mouse.get_pos()
 level = LevelEditor()
 screen.fill((220, 220, 220))
 level.get_sprite_rect()
+
 run = True
 while run:
-    level.sprite_clicked()
+    if not level.clicked_sprite:
+        level.menu_clicked()
     level.sprite_place()
+
     clock.tick(20)
     game_event()
 
