@@ -1,6 +1,8 @@
+import csv
 import os
 import random
 import sys
+import time
 
 import pygame
 
@@ -55,6 +57,12 @@ class LevelEditor:
 
         self.mouse_click = False
         self.clicked_sprite = False
+        # test variables
+        self.num_test = 0
+        self.num_test2 = 0
+        self.draw_image = False
+        self.m = False
+        self.m_increment = 0
 
     def get_mouse_pos(self):  # get mouse positon
         self.mouse_x, self.mouse_y = pygame.mouse.get_pos()
@@ -76,13 +84,10 @@ class LevelEditor:
             if self.y_grid <= screen_width:
                 self.y_grid = self.y_grid + 9
 
-                print(self.y_grid)
-
             screen.blit(image, image_rect)
 
             pygame.draw.rect(screen, (250, 250, 250), (image_rect[0], image_rect[1], screen_width, image_rect[3]), 1)
 
-            # pygame.draw.rect(screen, (250, 0, 0), (self.y_grid,20, 60, 60))
             pygame.draw.rect(screen, (0, 0, 0), image_rect, 2)
 
     def menu_clicked(self):  # checks if mouse interacts with sprite_menu
@@ -98,51 +103,57 @@ class LevelEditor:
                 else:
                     self.clicked_sprite = False
 
-        # for img_rect in self.sprite_list_rect:
-        #     if not self.mouse_rect.colliderect(img_rect):
-        #         self.clicked_sprite = False
-
+    def sprite_place(self):  # allows sprite to be placed with rect argument
         if self.clicked_sprite:  # highlights clicked sprite
             pygame.draw.rect(screen, (255, 200, 0), self.mouse_sprite_collide, 3)
         pygame.display.update()
-
-    def sprite_place(self):  # allows sprite to be placed with rect argument
-
         if self.clicked_sprite:
-            # self.sprite_list_index = 0
+            self.draw_image = False
 
             if self.mouse_click and not self.mouse_rect.colliderect(self.mouse_sprite_collide):
                 screen.blit(self.sprite_list[self.sprite_list_index - 1], (self.mouse_x, self.mouse_y))
+
+                self.mouse_click = False
 
     def sprite_edit(self):  # allows for sprites to be edited
         pass
 
     def level_save(self):  # saves level built
-        pass
+        print(self.draw_image)
+
+        if self.draw_image:
+            with open('level.csv', 'a', newline='') as csv_file:
+                self.num_test += 1
+
+                writer = csv.writer(csv_file)
+                writer.writerow((self.sprite_list_index - 1, self.mouse_x, self.mouse_y))
 
 
 def game_event():
     for event in pygame.event.get():  # loop to quit game
         level.mouse_click = False
-        # level.mouse_click = True
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
+            if pygame.mouse.get_pressed() == (1, 0, 0):
                 level.mouse_click = True
+
                 level.get_mouse_pos()
 
             if event.button == 3:
                 level.clicked_sprite = False
 
-                # sprite_menu.mouse_x, sprite_menu.mouse_y = mx, my
         if event.type == pygame.QUIT:  # fix this
+            level.level_save()
+
             pygame.quit()
 
             sys.exit()
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
+                level.level_save()
                 pygame.quit()
+
                 sys.exit()
 
 
@@ -159,11 +170,11 @@ level.get_sprite_rect()
 
 run = True
 while run:
-    if not level.clicked_sprite:
-        level.menu_clicked()
-    level.sprite_place()
 
     clock.tick(20)
     game_event()
 
     redraw()
+    if not level.clicked_sprite:
+        level.menu_clicked()
+    level.sprite_place()

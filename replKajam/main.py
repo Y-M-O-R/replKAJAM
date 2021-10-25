@@ -1,3 +1,4 @@
+import csv
 import sys
 import os.path
 import pygame
@@ -36,6 +37,38 @@ def quit_game():
                 sys.exit()
 
 
+def level_reader():
+    sprite_list = [
+        pygame.image.load(r'C:\Users\ryous\OneDrive\Documents\GitHub\replKAJAM\replKajam\img\level\Background'
+                          r'\Blue.png'),
+        pygame.image.load(r'C:\Users\ryous\OneDrive\Documents\GitHub\replKAJAM\replKajam\img\level\Background'
+                          r'\Brown.png'),
+        pygame.image.load(r'C:\Users\ryous\OneDrive\Documents\GitHub\replKAJAM\replKajam\img\level\Background'
+                          r'\Gray.png'),
+        pygame.image.load(r'C:\Users\ryous\OneDrive\Documents\GitHub\replKAJAM\replKajam\img\level\Background'
+                          r'\Green.png'),
+        pygame.image.load(r'C:\Users\ryous\OneDrive\Documents\GitHub\replKAJAM\replKajam\img\level\Background'
+                          r'\Pink.png'),
+        pygame.image.load(r'C:\Users\ryous\OneDrive\Documents\GitHub\replKAJAM\replKajam\img\level\Background'
+                          r'\Purple.png'),
+        pygame.image.load(r'C:\Users\ryous\OneDrive\Documents\GitHub\replKAJAM\replKajam\img\level\Background'
+                          r'\Yellow.png'),
+    ]
+    with open('level.csv', 'r') as csv_file:
+        csv_reader = csv.reader(csv_file)
+        for sprite in csv_reader:
+            print(type(sprite), sprite)
+        sprite = list(map(int, sprite))
+        image_loc = sprite.pop(0)
+
+        screen.blit(sprite_list[image_loc], sprite)
+        # pygame.display.update()
+
+
+
+
+
+
 class Background:
     def __init__(self, filename, row, column):
         self.row = row
@@ -60,7 +93,7 @@ class Obstacle(pygame.sprite.Sprite):
         self.image.fill((250, 0, 0))
         # self.image.set_colorkey((250, 0, 0))
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-       # self.rect.midbottom = (screen_width, screen_height)
+    # self.rect.midbottom = (screen_width, screen_height)
 
 
 # player class contains everything player related
@@ -243,6 +276,8 @@ def redraw():
     clock.tick(20)
     player.display_hit_box()
     pygame.display.update()
+    level_reader()
+
     screen.blit(bg_temp, (0, 0))
 
 
