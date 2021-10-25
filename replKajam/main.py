@@ -36,6 +36,17 @@ def quit_game():
                 pygame.quit()
                 sys.exit()
 
+class Obstacle(pygame.sprite.Sprite):
+    def __init__(self, img, img_rect):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = img
+        # img_rect = pygame.Rect(img_rect)
+        img_rect.append(64)
+        img_rect.append(64)
+
+
+
+        self.rect = pygame.Rect(img_rect)
 
 def level_reader():
     sprite_list = [
@@ -55,14 +66,21 @@ def level_reader():
                           r'\Yellow.png'),
     ]
     with open('level.csv', 'r') as csv_file:
+        obstacle_sprite = pygame.sprite.Group()
         csv_reader = csv.reader(csv_file)
         for sprite in csv_reader:
-            print(type(sprite), sprite)
-        sprite = list(map(int, sprite))
-        image_loc = sprite.pop(0)
+            #print(sprite)
+            sprite = list(map(int, sprite))
+            img = sprite.pop(0)
+            img_draw = Obstacle(sprite_list[img], sprite)
+            obstacle_sprite.add(img_draw)
+            #print(img, sprite)
+           #  screen.blit(sprite_list[img], sprite)
+        return  obstacle_sprite
 
-        screen.blit(sprite_list[image_loc], sprite)
-        # pygame.display.update()
+
+obstacle_sprite = level_reader()
+# obstacle_sprite.
 
 
 
@@ -80,20 +98,6 @@ class Background:
 
     def image_return(self):
         return self.background_image
-
-
-class Obstacle(pygame.sprite.Sprite):
-    def __init__(self, x, y, width, height):
-        pygame.sprite.Sprite.__init__(self)
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.image = pygame.Surface([self.width, self.height])
-        self.image.fill((250, 0, 0))
-        # self.image.set_colorkey((250, 0, 0))
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-    # self.rect.midbottom = (screen_width, screen_height)
 
 
 # player class contains everything player related
@@ -228,7 +232,6 @@ class Player(pygame.sprite.Sprite):
         else:
             # jump animation
             if self.jump_count >= -10:  # jump will be in parabola shape (negative quadratic graph)
-                print('self', self.jump_count)
                 if self.sprite_direction:  # jump facing right
                     if 10 >= self.jump_count > 1:
                         self.image = self.jump_animation_right[0]  # jump rise animation
@@ -244,7 +247,6 @@ class Player(pygame.sprite.Sprite):
                         neg = -1
                     self.rect.y -= (self.jump_count ** 2) * 0.5 * neg
                     self.jump_count -= 1
-                    print(self.jump_count)
 
                 elif not self.sprite_direction:  # jump facing left
                     if 10 >= self.jump_count > 1:
@@ -275,18 +277,14 @@ class Player(pygame.sprite.Sprite):
 def redraw():
     clock.tick(20)
     player.display_hit_box()
+    # level_reader()
+
     pygame.display.update()
-    level_reader()
 
     screen.blit(bg_temp, (0, 0))
 
 
-obs = Obstacle(100, 500, 100, 100)
-pbs = Obstacle(500, 500, 200, 50)
 
-obstacle_sprite = pygame.sprite.Group()
-obstacle_sprite.add(obs)
-obstacle_sprite.add(pbs)
 bg_temp = pygame.transform.scale(pygame.image.load(r'C:\Users\ryous\OneDrive\Documents\GitHub\replKAJAM\replKajam\img'
                                                    r'\download.jpg'), (screen_width, screen_height))
 # bg = pygame.transform.scale(bg_temp, (screen_height, screen_width))
@@ -299,7 +297,9 @@ run = True
 while run:
     obstacle_collision = pygame.sprite.spritecollide(player, obstacle_sprite, False)
     if obstacle_collision:
-        player.rect.x, player.rect.y = obs.rect.x, obs.rect.y - obs.height
+        # player.rect.x +=1
+        player.rect.y += -1
+
     obstacle_sprite.draw(screen)
     all_sprites.draw(screen)
     all_sprites.update()

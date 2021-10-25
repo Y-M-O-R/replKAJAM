@@ -57,12 +57,7 @@ class LevelEditor:
 
         self.mouse_click = False
         self.clicked_sprite = False
-        # test variables
-        self.num_test = 0
-        self.num_test2 = 0
-        self.draw_image = False
-        self.m = False
-        self.m_increment = 0
+
 
     def get_mouse_pos(self):  # get mouse positon
         self.mouse_x, self.mouse_y = pygame.mouse.get_pos()
@@ -108,10 +103,10 @@ class LevelEditor:
             pygame.draw.rect(screen, (255, 200, 0), self.mouse_sprite_collide, 3)
         pygame.display.update()
         if self.clicked_sprite:
-            self.draw_image = False
 
             if self.mouse_click and not self.mouse_rect.colliderect(self.mouse_sprite_collide):
                 screen.blit(self.sprite_list[self.sprite_list_index - 1], (self.mouse_x, self.mouse_y))
+                self.level_save()
 
                 self.mouse_click = False
 
@@ -119,14 +114,11 @@ class LevelEditor:
         pass
 
     def level_save(self):  # saves level built
-        print(self.draw_image)
 
-        if self.draw_image:
-            with open('level.csv', 'a', newline='') as csv_file:
-                self.num_test += 1
+        with open('level.csv', 'a', newline='') as csv_file:
 
-                writer = csv.writer(csv_file)
-                writer.writerow((self.sprite_list_index - 1, self.mouse_x, self.mouse_y))
+            writer = csv.writer(csv_file)
+            writer.writerow((self.sprite_list_index - 1, self.mouse_x, self.mouse_y))
 
 
 def game_event():
