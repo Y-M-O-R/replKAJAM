@@ -3,6 +3,8 @@ import sys
 import os.path
 import pygame
 
+
+
 pygame.init()
 
 # screen
@@ -43,9 +45,6 @@ class Obstacle(pygame.sprite.Sprite):
         # img_rect = pygame.Rect(img_rect)
         img_rect.append(64)
         img_rect.append(64)
-
-
-
         self.rect = pygame.Rect(img_rect)
 
 def level_reader():
@@ -80,27 +79,71 @@ def level_reader():
 
 
 obstacle_sprite = level_reader()
-# obstacle_sprite.
 
 
 
 
 
+class SpriteSheet(object):
+    """ Class used to grab images out of a sprite sheet. """
+    # This points to our sprite sheet image
+    sprite_sheet = None
+
+    def __init__(self, file_name):
+        """ Constructor. Pass in the file name of the sprite sheet. """
+
+        # Load the sprite sheet.
+        self.sprite_sheet = pygame.image.load(file_name).convert_alpha()
+
+    def get_image(self, x, y, width, height):
+        """ Grab a single image out of a larger spritesheet
+            Pass in the x, y location of the sprite
+            and the width and height of the sprite. """
+
+        # Create a new blank image
+        image = pygame.Surface([width, height]).convert()
+
+        # Copy the sprite from the large sheet onto the smaller image
+        image.blit(self.sprite_sheet, (0, 0), (x, y, width, height))
+
+        # scale sprite
+        image = pygame.transform.scale(image,(500,500))
+
+        # Assuming black works as the transparent color
+        ##image.set_colorkey((0, 0, 0))
+        transColor = image.get_at((0, 0))
+        image.set_colorkey(transColor)
+
+        # Return the image
+        return image  # , a
 
 class Background:
-    def __init__(self, filename, row, column):
-        self.row = row
-        self.column = column
-        self.background_image = pygame.image.load(filename).convert_alpha()
-        self.background_image_rect = self.background_image.get_rect()
+    def __init__(self):
+        self.sprite_sheet = SpriteSheet(r'C:\Users\ryous\OneDrive\Documents\GitHub\replKAJAM\replKajam\img\background\earth.png')
+        self.sprite_list = []
+        self.sprite_x_row = 0
+        self.sprite_y_column = 0
+        self.column_length = 9
+        self.sprite_total = 0
 
-        # self.background_image_rect.x = self.background_image.rect.x//row
+        for sprite in range(70):
+            self.sprite_list.append(self.sprite_sheet.get_image(self.sprite_x_row, self.sprite_y_column, 99, 99))
+            self.sprite_x_row += 99
+            if sprite >= self.column_length:
+                self.sprite_y_column += 99
+                self.column_length += 9
+                self.sprite_x_row = 0
 
-    def image_return(self):
-        return self.background_image
+    def run_background(self):
+        if self.sprite_total == 60:
+            self.sprite_total = 0
+        screen.blit(self.sprite_list[self.sprite_total], (screen_width//2- 250, screen_height//2-250))
+                    #screen_width//2,screen_height//2
+        self.sprite_total +=1
 
 
-# player class contains everything player related
+
+
 class Player(pygame.sprite.Sprite):
 
     def __init__(self, vel=5, health=5,
@@ -114,6 +157,12 @@ class Player(pygame.sprite.Sprite):
         self.damage = damage
         self.left = False
         self.right = False
+
+        self.position, self.velocity = pygame.math.Vector2(0,0)
+        self.left_obsctacle_collision = False
+        self.right_obsctacle_collision = False
+        self.jump_obstacle_collision = False
+
         self.file_location = os.path.join('img', 'pixel_platformer_player')
 
         # animation for sprite
@@ -210,17 +259,20 @@ class Player(pygame.sprite.Sprite):
         # player inputs
         user_input = pygame.key.get_pressed()
 
-        if user_input[pygame.K_LEFT] and not (
-                self.rect.colliderect(screen_border.left_height)):  # not crossing screen collision rect
+        if user_input[pygame.K_LEFT] and not (self.rect.colliderect(screen_border.left_height)) :
+        # not crossing screen collision rect
             self.rect.x -= self.vel
             self.left = True
             self.right = False
 
         elif user_input[pygame.K_RIGHT] and not (
-                self.rect.colliderect(screen_border.right_height)):  # not crossing screen collision rect
+                self.rect.colliderect(screen_border.right_height)) :  # not crossing screen collision rect
             self.rect.x += self.vel
             self.left = False
             self.right = True
+            ##
+            if player.left_obsctacle_collision:
+                player.vel *= -1
         else:
             self.left = False
             self.right = False
@@ -231,7 +283,8 @@ class Player(pygame.sprite.Sprite):
                 self.is_jump = True
         else:
             # jump animation
-            if self.jump_count >= -10:  # jump will be in parabola shape (negative quadratic graph)
+
+            if self.jump_count >= -10 :  # jump will be in parabola shape (negative quadratic graph)
                 if self.sprite_direction:  # jump facing right
                     if 10 >= self.jump_count > 1:
                         self.image = self.jump_animation_right[0]  # jump rise animation
@@ -243,8 +296,10 @@ class Player(pygame.sprite.Sprite):
                         self.image = self.jump_animation_right[2]  # jump land animation
 
                     neg = 1
-                    if self.jump_count < 0:  # creates turning point of negative quadratic graph
+                    if self.jump_count < 0 :  # creates turning point of negative quadratic graph
                         neg = -1
+
+                    #if abs()
                     self.rect.y -= (self.jump_count ** 2) * 0.5 * neg
                     self.jump_count -= 1
 
@@ -259,7 +314,7 @@ class Player(pygame.sprite.Sprite):
                         self.image = self.jump_animation_left[2]
 
                     neg = 1
-                    if self.jump_count < 0:  # creates turning point of negative quadratic graph
+                    if self.jump_count < 0 :  # creates turning point of negative quadratic graph
                         neg = -1
                     self.rect.y -= (self.jump_count ** 2) * 0.5 * neg
                     self.jump_count -= 1
@@ -268,40 +323,103 @@ class Player(pygame.sprite.Sprite):
                 self.is_jump = False
                 self.jump_count = 10
 
+            if player.rect.y < 400:
+                player.rect.y +=1
+
     def update(self):  # updates sprite
         self.animation()
         self.game_control()
 
-
+pg = pygame.transform.scale(pygame.image.load(r'C:\Users\ryous\OneDrive\Documents\GitHub\replKAJAM\replKajam\img\pixel_star_2.png'), (screen_width,screen_height))
 # redraws screen
 def redraw():
     clock.tick(20)
-    player.display_hit_box()
-    # level_reader()
+    screen.blit(pg,(0,0))
+    background.run_background()
+    #player.display_hit_box()
+    obstacle_sprite.draw(screen)
+    all_sprites.draw(screen)
+    all_sprites.update()
+    pygame.draw.rect(screen, (255, 255, 255) , obstacle, 2)
+
 
     pygame.display.update()
 
-    screen.blit(bg_temp, (0, 0))
 
 
 
-bg_temp = pygame.transform.scale(pygame.image.load(r'C:\Users\ryous\OneDrive\Documents\GitHub\replKAJAM\replKajam\img'
-                                                   r'\download.jpg'), (screen_width, screen_height))
+background = Background()
+
 # bg = pygame.transform.scale(bg_temp, (screen_height, screen_width))
 player = Player()
 # sprite Class
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
+
+
+obstacles_rect = obstacle_sprite.sprites()
+obstacle= obstacles_rect[0]
+
+player.rect.bottom += 1
+
 # game loop
 run = True
 while run:
-    obstacle_collision = pygame.sprite.spritecollide(player, obstacle_sprite, False)
-    if obstacle_collision:
-        # player.rect.x +=1
-        player.rect.y += -1
 
-    obstacle_sprite.draw(screen)
-    all_sprites.draw(screen)
-    all_sprites.update()
     redraw()
+    collision_tolerance = 10
+
+    if player.rect.colliderect(obstacle):
+        if abs(obstacle.rect.bottom - player.rect.top) < collision_tolerance:
+            pass
+
+    if player.rect.colliderect(obstacle):
+        if abs(obstacle.rect.right - player.rect.left) < collision_tolerance:
+            player.rect.x = obstacle.rect.x+64
+
+
+    if player.rect.colliderect(obstacle):
+        if abs(obstacle.rect.left - player.rect.right) < collision_tolerance:
+            player.rect.x = obstacle.rect.left - player.rect.w
+
+
+
+    # player.vel *=-1
+
+    # obstacle_collision = pygame.sprite.spritecollide(player, obstacle_sprite, False)
+    # if obstacle_collision:
+    #     if player.left:  # if left key pressed
+    #         player.left_obsctacle_collision = True
+
+    #     elif player.right:
+    #         player.right_obsctacle_collision = True
+
+    # if player.is_jump:
+
+    #     if obstacle_collision:
+    #         player.jump_obstacle_collision = True
+
+
+
+    # elif not  obstacle_collision:
+    #     player.left_obsctacle_collision = False
+    #     player.right_obsctacle_collision = False
+    #     player.jump_obstacle_collision = False
+
+
+
+
+    def update(self):
+        for bound in self.bound_list:
+            if player.rect.colliderect(bound):
+                self.obsctacle_collision = True
+                break
+            else:
+                self.obsctacle_collision = False
+        print(123)
+
+
+
+
+
     quit_game()
